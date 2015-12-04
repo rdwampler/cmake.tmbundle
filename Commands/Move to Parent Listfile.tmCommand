@@ -6,12 +6,13 @@
 	<string>nop</string>
 	<key>command</key>
 	<string>#!/usr/bin/env ruby18
+require ENV['TM_SUPPORT_PATH'] + '/lib/exit_codes'
 require ENV['TM_SUPPORT_PATH'] + '/lib/textmate'
 
-abort "Unsaved file" unless ENV['TM_FILEPATH']
+TextMate::exit_show_tool_tip("Unsaved file") unless ENV['TM_FILEPATH']
 
 path = File.dirname(File.dirname(ENV['TM_FILEPATH'])) + "/CMakeLists.txt"
-abort "No parent listfile" unless File.exist?(path)
+TextMate::exit_show_tool_tip("No parent listfile") unless File.exist?(path)
 TextMate.go_to(:file =&gt; path)
 
 </string>
@@ -19,15 +20,23 @@ TextMate.go_to(:file =&gt; path)
 	<string>line</string>
 	<key>input</key>
 	<string>none</string>
+	<key>inputFormat</key>
+	<string>text</string>
 	<key>keyEquivalent</key>
 	<string>~@</string>
 	<key>name</key>
 	<string>Move to Parent Listfile</string>
-	<key>output</key>
-	<string>showAsTooltip</string>
+	<key>outputCaret</key>
+	<string>afterOutput</string>
+	<key>outputFormat</key>
+	<string>text</string>
+	<key>outputLocation</key>
+	<string>toolTip</string>
 	<key>scope</key>
 	<string>source.cmake</string>
 	<key>uuid</key>
 	<string>48A1D967-E8CF-4C16-A58F-60471E9469E3</string>
+	<key>version</key>
+	<integer>2</integer>
 </dict>
 </plist>

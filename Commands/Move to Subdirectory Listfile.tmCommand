@@ -6,10 +6,11 @@
 	<string>nop</string>
 	<key>command</key>
 	<string>#!/usr/bin/env ruby18
+require ENV['TM_SUPPORT_PATH'] + '/lib/exit_codes'
 require ENV['TM_SUPPORT_PATH'] + '/lib/textmate'
 require ENV['TM_SUPPORT_PATH'] + '/lib/ui'
 
-abort "Unsaved file" unless ENV['TM_FILEPATH']
+TextMate::exit_show_tool_tip("Unsaved file") unless ENV['TM_FILEPATH']
 
 line   = STDIN.read
 dir    = File.dirname(ENV['TM_FILEPATH'])
@@ -19,16 +20,16 @@ if line =~ /ADD_SUBDIRECTORY\s*\((.+?)\)/i
   subdir = $1
 else
   subdirs = Dir[dir + "/*/CMakeLists.txt"].map { |p| File.basename(File.dirname(p)) }.sort
-  abort "No listfile found in subdirectories" if subdirs.empty?
+  TextMate::exit_show_tool_tip("No listfile found in subdirectories") if subdirs.empty?
   choice = TextMate::UI.menu(subdirs)
-  abort "Cancelled" unless choice
+  TextMate::exit_discard unless choice
   subdir = subdirs[choice]
 end
 
 if subdir
   file = subdir + "/CMakeLists.txt"
   path = File.join(dir, file)
-  abort "The file at #{file} doesn't exist" unless File.exist?(path)
+  TextMate::exit_show_tool_tip("The file at #{file} doesn't exist") unless File.exist?(path)
   TextMate.go_to(:file =&gt; path)
 end
 </string>
@@ -36,15 +37,23 @@ end
 	<string>line</string>
 	<key>input</key>
 	<string>selection</string>
+	<key>inputFormat</key>
+	<string>text</string>
 	<key>keyEquivalent</key>
 	<string>~@</string>
 	<key>name</key>
 	<string>Move to Subdirectory Listfile</string>
-	<key>output</key>
-	<string>showAsTooltip</string>
+	<key>outputCaret</key>
+	<string>afterOutput</string>
+	<key>outputFormat</key>
+	<string>text</string>
+	<key>outputLocation</key>
+	<string>toolTip</string>
 	<key>scope</key>
 	<string>source.cmake</string>
 	<key>uuid</key>
 	<string>6F326FB4-8DC0-49BE-B74C-7B49CFA5283F</string>
+	<key>version</key>
+	<integer>2</integer>
 </dict>
 </plist>
