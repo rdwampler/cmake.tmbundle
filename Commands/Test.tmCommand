@@ -12,7 +12,35 @@ require "#{ENV["TM_SUPPORT_PATH"]}/lib/escape"
 flags = [ ]
 flags &lt;&lt; ENV["TM_CTEST_FLAGS"].split(" ") unless ENV["TM_CTEST_FLAGS"].nil?
 
-TextMate::Executor.run(e_sh(ENV["TM_CTEST"] || 'ctest'), flags, :chdir =&gt; ENV["TM_CMAKE_BINARY_DIR"], :verb =&gt; "Running", :noun =&gt; ("tests"), :use_hashbang =&gt; false, :version_args =&gt; '--version')
+TextMate::Executor.run(e_sh(ENV["TM_CTEST"] || 'ctest'), flags, :chdir =&gt; ENV["TM_CMAKE_BINARY_DIR"], :verb =&gt; "Running", :noun =&gt; ("tests"), :use_hashbang =&gt; false, :version_args =&gt; '--version') do |str, type|
+  if str =~ /(^\d+:\s)(\[.+(?:=|-|RUN|OK|PASSED).+\])(.*\W)$/
+    "#{htmlize($1)} &lt;span class=test&gt;&lt;span class=\"test ok\"&gt;#{htmlize($2)}&lt;/span&gt;#{htmlize($3)}&lt;/span&gt;"
+  elsif str =~ /(^\d+:\s)(\[.*FAILED.*\])(.*\W)$/
+    "#{htmlize($1)} &lt;span class=test&gt;&lt;span class=\"test err\"&gt;#{htmlize($2)}&lt;/span&gt;#{htmlize($3)}&lt;/span&gt;"
+  elsif str =~ /(^\d+:)(.*?)(:(?:(\d+):)?(?:(\d+):)?)\s*(.*?)$/
+    dirs = [ENV["TM_CMAKE_BINARY_DIR"], ENV['TM_PROJECT_DIRECTORY']]
+    testno, file, prefix, lineno, column, message = $1, $2, $3, $4, $5, $6
+    path = dirs.map{ |dir| File.expand_path(file.lstrip, dir) rescue "#{dir}/#{file}" }.find{ |path| File.file? path }
+    unless path.nil?
+      relative = path
+      parms = [ ]
+      parms &lt;&lt; [ "line=#{lineno}" ] unless lineno.nil?
+      
+      if path == ENV['TM_FILEPATH'] and ENV.has_key? "TM_FILE_IS_UNTITLED"
+        parms &lt;&lt; [ "uuid=#{ENV['TM_DOCUMENT_UUID']}" ]
+        relative = file = ENV['TM_DISPLAYNAME']
+      else
+        parms &lt;&lt; [ "url=file://#{e_url path}" ]
+        relative = path.sub(/^#{Regexp.escape ENV['TM_PROJECT_DIRECTORY']}\/?/, '') if ENV.has_key? "TM_PROJECT_DIRECTORY"
+        file = File.basename(path)
+      end
+      info = relative.gsub('&amp;', '&amp;amp;').gsub('&lt;', '&amp;lt;').gsub('"', '&amp;quot;')
+      "#{htmlize(testno)} &lt;a href=\"txmt://open?#{parms.join '&amp;'}\" title=\"#{info}\"&gt;#{file}&lt;/a&gt; &lt;span class=test&gt;#{htmlize message}&lt;/span&gt;&lt;br&gt;\n" unless path.nil?
+    end  
+  elsif str =~ /(^\d+:\s)(.*\W)$/
+    "#{htmlize($1)} &lt;span class=test&gt;#{htmlize($2)}&lt;/span&gt;"
+  end
+end
 </string>
 	<key>input</key>
 	<string>none</string>
